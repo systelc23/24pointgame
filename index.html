@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>24点游戏</title>
+
+	<style>
+		/* ==================== CSS变量配置 ==================== */
+		:root {
+			/* 容器配置 */
+			--container-padding: 50px;
+			--container-max-width: 700px;
+			--container-border-radius: 20px;
+
+			/* 标题配置 */
+			--title-font-size: 2.5em;
+			--title-margin: 30px;
+
+			/* 卡牌配置 */
+			--card-width: 100px;
+			--card-height: 140px;
+			--card-border-radius: 12px;
+			--card-font-size: 2em;
+			--card-gap: 20px;
+
+			/* 按钮配置 */
+			--btn-padding: 14px 28px;
+			--btn-font-size: 1.1em;
+			--btn-border-radius: 8px;
+			--btn-margin: 10px;
+
+			/* 问题区域配置 */
+			--question-font-size: 1.2em;
+			--question-margin: 20px;
+
+			/* 答案区域配置 */
+			--answer-height: 300px;
+			--answer-font-size: 1.3em;
+			--answer-padding: 20px;
+
+			/* 颜色配置 */
+			--color-primary: #3498db;
+			--color-success: #27ae60;
+			--color-danger: #e74c3c;
+			--color-warning: #f39c12;
+			--color-text: #2c3e50;
+			--color-text-light: #7f8c8d;
+			--color-bg: #ecf0f1;
+			--color-bg-light: #ffffff;
+			--color-border: #bdc3c7;
+			--color-shadow: rgba(0, 0, 0, 0.1);
+			--color-shadow-hover: rgba(0, 0, 0, 0.2);
+
+			/* 卡牌颜色 */
+			--color-card-red: #e74c3c;
+			--color-card-red-dark: #c0392b;
+			--color-card-black: #2c3e50;
+			--color-card-black-dark: #1a252f;
+		}
+
+		/* ==================== 全局样式 ==================== */
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Microsoft YaHei', 'SimHei', Arial, sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 20px;
+			color: var(--color-text);
+		}
+
+		/* ==================== 容器布局 ==================== */
+		.container {
+			background: var(--color-bg-light);
+			border-radius: var(--container-border-radius);
+			padding: var(--container-padding);
+			max-width: var(--container-max-width);
+			width: 100%;
+			box-shadow: 0 20px 60px var(--color-shadow);
+		}
+
+		.title {
+			text-align: center;
+			font-size: var(--title-font-size);
+			margin-bottom: var(--title-margin);
+			color: var(--color-primary);
+			font-weight: bold;
+		}
+
+		/* ==================== 标签页切换 ==================== */
+		.tabs {
+			display: flex;
+			justify-content: center;
+			margin-bottom: 30px;
+			border-bottom: 2px solid var(--color-border);
+		}
+
+		.tab-button {
+			flex: 1;
+			padding: 15px 30px;
+			background: none;
+			border: none;
+			border-bottom: 3px solid transparent;
+			font-size: 1.2em;
+			color: var(--color-text-light);
+			cursor: pointer;
+			transition: all 0.3s;
+			font-weight: normal;
+		}
+
+		.tab-button:hover {
+			color: var(--color-primary);
+			background: rgba(52, 152, 219, 0.05);
+		}
+
+		.tab-button.active {
+			color: var(--color-primary);
+			font-weight: bold;
+			border-bottom-color: var(--color-primary);
+		}
+
+		.mode-content {
+			display: none;
+		}
+
+		.mode-content.active {
+			display: block;
+		}
+
+		/* ==================== 卡牌样式 ==================== */
+		.cards-container {
+			display: flex;
+			justify-content: center;
+			gap: var(--card-gap);
+			margin: 30px 0;
+			flex-wrap: wrap;
+		}
+
+		.card {
+			width: var(--card-width);
+			height: var(--card-height);
+			background: var(--color-bg-light);
+			border: 2px solid var(--color-border);
+			border-radius: var(--card-border-radius);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			font-size: var(--card-font-size);
+			font-weight: bold;
+			cursor: pointer;
+			transition: all 0.3s;
+			box-shadow: 0 4px 8px var(--color-shadow);
+			user-select: none;
+		}
+
+		.card:hover {
+			transform: translateY(-8px);
+			box-shadow: 0 8px 16px var(--color-shadow-hover);
+		}
+
+		.card:active {
+			transform: scale(0.98);
+			box-shadow: 0 2px 4px var(--color-shadow);
+		}
+
+		.card .suit {
+			font-size: 1.2em;
+			margin-bottom: 5px;
+		}
+
+		.card .rank {
+			font-size: 1em;
+		}
+
+		/* 红色花色（红心♥、方片♦） */
+		.card.red {
+			color: var(--color-card-red);
+		}
+
+		.card.red:active {
+			background: #ffe5e5;
+			color: var(--color-card-red-dark);
+		}
+
+		/* 黑色花色（黑桃♠、梅花♣） */
+		.card.black {
+			color: var(--color-card-black);
+		}
+
+		.card.black:active {
+			background: #e8eef2;
+			color: var(--color-card-black-dark);
+		}
+
+		/* ==================== 按钮样式 ==================== */
+		.btn-group {
+			display: flex;
+			justify-content: center;
+			gap: var(--btn-margin);
+			margin: 20px 0;
+			flex-wrap: wrap;
+		}
+
+		.btn {
+			padding: var(--btn-padding);
+			font-size: var(--btn-font-size);
+			border: none;
+			border-radius: var(--btn-border-radius);
+			cursor: pointer;
+			transition: all 0.3s;
+			font-weight: bold;
+			box-shadow: 0 2px 4px var(--color-shadow);
+		}
+
+		.btn:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 8px var(--color-shadow-hover);
+		}
+
+		.btn:active {
+			transform: translateY(0);
+			box-shadow: 0 1px 2px var(--color-shadow);
+		}
+
+		.btn-primary {
+			background: var(--color-primary);
+			color: white;
+		}
+
+		.btn-success {
+			background: var(--color-success);
+			color: white;
+		}
+
+		.btn-danger {
+			background: var(--color-danger);
+			color: white;
+		}
+
+		.btn-secondary {
+			background: var(--color-text-light);
+			color: white;
+		}
+
+		/* ==================== 答案显示区域 ==================== */
+		.answer-section {
+			margin: 30px 0;
+		}
+
+		.result-message {
+			text-align: center;
+			font-size: 1.5em;
+			font-weight: bold;
+			margin: 15px 0;
+			min-height: 40px;
+		}
+
+		.result-message.correct {
+			color: var(--color-success);
+		}
+
+		.result-message.wrong {
+			color: var(--color-danger);
+		}
+
+		.answer-box {
+			background: var(--color-bg);
+			border: 2px solid var(--color-border);
+			border-radius: 10px;
+			padding: var(--answer-padding);
+			height: var(--answer-height);
+			overflow-y: auto;
+			font-size: var(--answer-font-size);
+			white-space: pre-line;
+			line-height: 1.8;
+			font-family: 'Consolas', 'Monaco', monospace;
+		}
+
+		.answer-box:empty {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--color-text-light);
+			font-style: italic;
+		}
+
+		.answer-box:empty::after {
+			content: '点击"查看答案"显示解法';
+		}
+
+		/* ==================== 自定义出题和模态框样式 ==================== */
+		.custom-input-group {
+			display: none;
+			justify-content: center;
+			gap: 10px;
+			margin: 20px 0;
+			flex-wrap: wrap;
+		}
+
+		.custom-input-group input {
+			width: 80px;
+			padding: 10px;
+			font-size: 1.2em;
+			text-align: center;
+			border: 2px solid var(--color-border);
+			border-radius: 8px;
+		}
+
+		.error-message {
+			text-align: center;
+			color: var(--color-danger);
+			font-size: 1.1em;
+			margin: 10px 0;
+			min-height: 30px;
+		}
+
+		.modal {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 1000;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.modal.active {
+			display: flex;
+		}
+
+		.modal-content {
+			background: white;
+			padding: 30px;
+			border-radius: 15px;
+			max-width: 600px;
+			width: 90%;
+			max-height: 80vh;
+			overflow-y: auto;
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+		}
+
+		.modal-header {
+			font-size: 1.5em;
+			font-weight: bold;
+			margin-bottom: 20px;
+			color: var(--color-primary);
+			text-align: center;
+		}
+
+		.modal-close {
+			float: right;
+			font-size: 1.5em;
+			cursor: pointer;
+			color: var(--color-text-light);
+		}
+
+		.modal-close:hover {
+			color: var(--color-danger);
+		}
+
+		.history-item {
+			padding: 15px;
+			margin: 10px 0;
+			border: 1px solid var(--color-border);
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.3s;
+		}
+
+		.history-item:hover {
+			background: var(--color-bg);
+			transform: translateX(5px);
+		}
+
+		.history-item-time {
+			color: var(--color-text-light);
+			font-size: 0.9em;
+			margin-bottom: 5px;
+		}
+
+		.history-item-cards {
+			font-size: 1.2em;
+			margin: 5px 0;
+		}
+
+		.history-item-count {
+			color: var(--color-primary);
+			font-weight: bold;
+		}
+
+		/* ==================== 响应式设计 ==================== */
+		@media (max-width: 768px) {
+			:root {
+				/* 移动端调整容器 */
+				--container-padding: 20px;
+				--container-border-radius: 15px;
+
+				/* 移动端调整标题 */
+				--title-font-size: 2em;
+				--title-margin: 20px;
+
+				/* 移动端调整卡牌 */
+				--card-width: 80px;
+				--card-height: 112px;
+				--card-font-size: 1.5em;
+				--card-gap: 10px;
+
+				/* 移动端调整按钮 */
+				--btn-padding: 10px 20px;
+				--btn-font-size: 1em;
+				--btn-margin: 8px;
+
+				/* 移动端调整问题区域 */
+				--question-font-size: 1em;
+				--question-margin: 15px;
+
+				/* 移动端调整答案区域 */
+				--answer-height: 250px;
+				--answer-font-size: 1em;
+				--answer-padding: 15px;
+			}
+
+			body {
+				padding: 10px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1 class="title">24点游戏</h1>
+
+		<!-- 标签页切换 -->
+		<div class="tabs">
+			<button class="tab-button active" data-mode="practice">练习模式</button>
+			<button class="tab-button" data-mode="contest">竞赛模式</button>
+		</div>
+
+		<!-- 练习模式内容 -->
+		<div id="practice-mode" class="mode-content active">
+			<!-- 卡牌显示区域 -->
+			<div id="practice-cards" class="cards-container"></div>
+
+			<!-- 按钮组 -->
+			<div class="btn-group">
+				<button class="btn btn-primary" onclick="startRandomPractice()">随机出题</button>
+				<button class="btn btn-primary" onclick="toggleCustomInput()">自定义出题</button>
+				<button class="btn btn-secondary" onclick="showHistory()">查看历史</button>
+			</div>
+
+			<!-- 自定义输入区域 -->
+			<div class="custom-input-group" id="custom-input-group">
+				<input type="number" id="num1" min="1" max="13" placeholder="1-13">
+				<input type="number" id="num2" min="1" max="13" placeholder="1-13">
+				<input type="number" id="num3" min="1" max="13" placeholder="1-13">
+				<input type="number" id="num4" min="1" max="13" placeholder="1-13">
+				<button class="btn btn-success" onclick="startCustomPractice()">确认</button>
+				<button class="btn btn-secondary" onclick="toggleCustomInput()">取消</button>
+			</div>
+
+			<div class="error-message" id="custom-error"></div>
+
+			<!-- 答案按钮组 -->
+			<div class="btn-group">
+				<button class="btn btn-success" id="show-answer-btn" onclick="showAnswer()" style="display: none;">查看答案</button>
+				<button class="btn btn-secondary" id="next-question-btn" onclick="nextQuestion()" style="display: none;">下一题</button>
+			</div>
+
+			<!-- 答案显示区域 -->
+			<div class="answer-section" id="practice-answer-section" style="display: none;">
+				<div class="result-message" id="practice-result-message"></div>
+				<div class="answer-box" id="practice-answer-box"></div>
+			</div>
+		</div>
+
+		<!-- 竞赛模式内容 -->
+		<div id="contest-mode" class="mode-content">
+			<!-- 竞赛规则说明 -->
+			<div id="contest-rules" style="background: var(--color-bg); padding: 20px; border-radius: 10px; margin: 20px 0;">
+				<h3 style="color: var(--color-primary); margin-bottom: 15px;">竞赛规则</h3>
+				<ul style="line-height: 2; color: var(--color-text);">
+					<li>判断4张卡牌是否能算出24点</li>
+					<li>共10道题，每答对1题得10分，满分100分</li>
+					<li>排行榜按得分和用时排序</li>
+				</ul>
+				<div class="btn-group" style="margin-top: 20px;">
+					<button class="btn btn-primary" onclick="startContest()">开始竞赛</button>
+					<button class="btn btn-secondary" onclick="showBestScores()">最好成绩</button>
+				</div>
+			</div>
+
+			<!-- 竞赛进行中界面 -->
+			<div id="contest-playing" style="display: none;">
+				<!-- 竞赛状态显示 -->
+				<div style="background: var(--color-bg); padding: 15px; border-radius: 10px; margin: 20px 0; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+					<div style="text-align: center;">
+						<div style="color: var(--color-text-light); font-size: 0.9em;">进度</div>
+						<div id="contest-progress" style="font-size: 1.2em; font-weight: bold; color: var(--color-primary);">1/10</div>
+					</div>
+					<div style="text-align: center;">
+						<div style="color: var(--color-text-light); font-size: 0.9em;">答对/答总</div>
+						<div id="contest-correct" style="font-size: 1.2em; font-weight: bold; color: var(--color-success);">0/0</div>
+					</div>
+					<div style="text-align: center;">
+						<div style="color: var(--color-text-light); font-size: 0.9em;">得分</div>
+						<div id="contest-score" style="font-size: 1.2em; font-weight: bold; color: var(--color-primary);">0分</div>
+					</div>
+					<div style="text-align: center;">
+						<div style="color: var(--color-text-light); font-size: 0.9em;">用时</div>
+						<div id="contest-timer" style="font-size: 1.2em; font-weight: bold; color: var(--color-text);">00:00</div>
+					</div>
+				</div>
+
+				<!-- 卡牌显示 -->
+				<div id="contest-cards" class="cards-container"></div>
+
+				<!-- 判断按钮和下一题按钮 -->
+				<div class="btn-group">
+					<button class="btn btn-success" id="contest-can-btn" onclick="answerContest(true)">能</button>
+					<button class="btn btn-danger" id="contest-cannot-btn" onclick="answerContest(false)">不能</button>
+					<button class="btn btn-secondary" id="contest-next-btn" onclick="nextContestQuestion()" style="display: none;">下一题</button>
+				</div>
+
+				<!-- 答案显示 -->
+				<div class="answer-section" id="contest-answer-section" style="display: none;">
+					<div class="result-message" id="contest-result-message"></div>
+					<div class="answer-box" id="contest-answer-box"></div>
+				</div>
+
+				<!-- 退出按钮 -->
+				<div class="btn-group">
+					<button class="btn btn-danger" onclick="exitContest()">退出竞赛</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 历史记录模态框 -->
+	<div class="modal" id="history-modal">
+		<div class="modal-content">
+			<span class="modal-close" onclick="closeHistory()">&times;</span>
+			<div class="modal-header">练习历史</div>
+			<div id="history-list"></div>
+			<div class="btn-group" style="margin-top: 20px;">
+				<button class="btn btn-danger" onclick="clearHistory()">清除历史</button>
+				<button class="btn btn-secondary" onclick="closeHistory()">关闭</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 竞赛结果模态框 -->
+	<div class="modal" id="contest-result-modal">
+		<div class="modal-content">
+			<div class="modal-header">竞赛完成</div>
+			<div id="contest-result-content" style="text-align: center; line-height: 2;"></div>
+			<div class="btn-group" style="margin-top: 20px;">
+				<button class="btn btn-primary" onclick="closeContestResult()">确定</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 最好成绩模态框 -->
+	<div class="modal" id="best-scores-modal">
+		<div class="modal-content">
+			<span class="modal-close" onclick="closeBestScores()">&times;</span>
+			<div class="modal-header">最好成绩</div>
+			<div id="best-scores-list"></div>
+			<div class="btn-group" style="margin-top: 20px;">
+				<button class="btn btn-secondary" onclick="closeBestScores()">关闭</button>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		/* ==================== 全局状态 ==================== */
+		const gameState = {
+			currentMode: 'practice', // 当前模式：practice 或 contest
+			currentCards: [], // 当前显示的4张牌
+			currentSolutions: [] // 当前题目的解法
+		};
+
+		// 竞赛模式状态
+		const contestState = {
+			isActive: false,
+			questions: [],
+			currentIndex: 0,
+			correctCount: 0,
+			wrongCount: 0,
+			totalTime: 0,
+			timer: null
+		};
+
+		/* ==================== 模式切换逻辑 ==================== */
+		// 初始化标签页切换
+		document.addEventListener('DOMContentLoaded', () => {
+			const tabButtons = document.querySelectorAll('.tab-button');
+
+			tabButtons.forEach(button => {
+				button.addEventListener('click', () => {
+					const mode = button.dataset.mode;
+					switchMode(mode);
+				});
+			});
+
+			// 初始显示随机题目
+			startRandomPractice();
+		});
+
+		// 切换模式
+		function switchMode(mode) {
+			// 更新全局状态
+			gameState.currentMode = mode;
+
+			// 更新标签按钮状态
+			document.querySelectorAll('.tab-button').forEach(btn => {
+				if (btn.dataset.mode === mode) {
+					btn.classList.add('active');
+				} else {
+					btn.classList.remove('active');
+				}
+			});
+
+			// 更新内容显示
+			document.querySelectorAll('.mode-content').forEach(content => {
+				if (content.id === `${mode}-mode`) {
+					content.classList.add('active');
+				} else {
+					content.classList.remove('active');
+				}
+			});
+		}
+
+		/* ==================== 核心算法 - 扑克牌生成 ==================== */
+		// 创建52张标准扑克牌
+		function createDeck() {
+			const suits = ['♠', '♥', '♣', '♦'];
+			const deck = [];
+
+			for (let suit of suits) {
+				for (let value = 1; value <= 13; value++) {
+					let rank;
+					if (value === 1) rank = 'A';
+					else if (value === 11) rank = 'J';
+					else if (value === 12) rank = 'Q';
+					else if (value === 13) rank = 'K';
+					else rank = String(value);
+
+					deck.push({ suit, rank, value });
+				}
+			}
+
+			return deck;
+		}
+
+		// 随机抽取4张不重复的牌
+		function getRandomCards(count = 4) {
+			const deck = createDeck();
+			const shuffled = [...deck];
+
+			// Fisher-Yates洗牌算法
+			for (let i = shuffled.length - 1; i > 0; i--) {
+				const j = Math.floor(Math.random() * (i + 1));
+				[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+			}
+
+			return shuffled.slice(0, count);
+		}
+
+		// 根据数字创建牌（用于自定义出题）
+		function createCardsFromNumbers(numbers) {
+			const suits = ['♠', '♥', '♣', '♦'];
+			const cards = [];
+
+			for (let i = 0; i < numbers.length; i++) {
+				const num = numbers[i];
+				// 按顺序分配花色，确保4张牌花色不同
+				const suit = suits[i % suits.length];
+
+				let rank;
+				if (num === 1) rank = 'A';
+				else if (num === 11) rank = 'J';
+				else if (num === 12) rank = 'Q';
+				else if (num === 13) rank = 'K';
+				else rank = String(num);
+
+				cards.push({ suit, rank, value: num });
+			}
+
+			return cards;
+		}
+
+		/* ==================== 核心算法 - 24点计算 ==================== */
+		// 全排列函数
+		function permute(arr) {
+			if (arr.length <= 1) return [arr];
+
+			const result = [];
+			for (let i = 0; i < arr.length; i++) {
+				const current = arr[i];
+				const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+				const perms = permute(remaining);
+
+				for (let perm of perms) {
+					result.push([current, ...perm]);
+				}
+			}
+
+			return result;
+		}
+
+		// 计算两个数的运算结果
+		function evaluate(a, b, op) {
+			switch(op) {
+				case '+': return a + b;
+				case '-': return a - b;
+				case '*': return a * b;
+				case '/': return b !== 0 ? a / b : null; // 除零返回null
+				default: return null;
+			}
+		}
+
+		// 查找所有24点解法
+		function findSolutions(cards) {
+			const numbers = cards.map(card => card.value);
+			const solutions = []; // 先收集所有解法，不使用Set去重
+			const operators = ['+', '-', '*', '/'];
+
+			// 获取所有数字排列
+			const numberPerms = permute(numbers);
+
+			// 5种括号结构
+			const templates = [
+				{ calc: (a, b, c, d, ops) => evaluate(evaluate(evaluate(a, b, ops[0]), c, ops[1]), d, ops[2]),
+				  format: (a, b, c, d, ops) => `((${a} ${ops[0]} ${b}) ${ops[1]} ${c}) ${ops[2]} ${d}` },
+
+				{ calc: (a, b, c, d, ops) => evaluate(evaluate(a, evaluate(b, c, ops[1]), ops[0]), d, ops[2]),
+				  format: (a, b, c, d, ops) => `(${a} ${ops[0]} (${b} ${ops[1]} ${c})) ${ops[2]} ${d}` },
+
+				{ calc: (a, b, c, d, ops) => evaluate(evaluate(a, b, ops[0]), evaluate(c, d, ops[2]), ops[1]),
+				  format: (a, b, c, d, ops) => `(${a} ${ops[0]} ${b}) ${ops[1]} (${c} ${ops[2]} ${d})` },
+
+				{ calc: (a, b, c, d, ops) => evaluate(a, evaluate(evaluate(b, c, ops[1]), d, ops[2]), ops[0]),
+				  format: (a, b, c, d, ops) => `${a} ${ops[0]} ((${b} ${ops[1]} ${c}) ${ops[2]} ${d})` },
+
+				{ calc: (a, b, c, d, ops) => evaluate(a, evaluate(b, evaluate(c, d, ops[2]), ops[1]), ops[0]),
+				  format: (a, b, c, d, ops) => `${a} ${ops[0]} (${b} ${ops[1]} (${c} ${ops[2]} ${d}))` }
+			];
+
+			// 遍历所有数字排列
+			for (let nums of numberPerms) {
+				const [a, b, c, d] = nums;
+
+				// 遍历所有运算符组合（4^3 = 64种）
+				for (let op1 of operators) {
+					for (let op2 of operators) {
+						for (let op3 of operators) {
+							const ops = [op1, op2, op3];
+
+							// 遍历5种括号结构
+							for (let template of templates) {
+								const result = template.calc(a, b, c, d, ops);
+
+								// 如果结果为24（容差0.0001）
+								if (result !== null && Math.abs(result - 24) < 0.0001) {
+									const expr = template.format(a, b, c, d, ops);
+									solutions.push(expr);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// 在所有解法计算完成后，统一执行去重处理
+			return deduplicateSolutions(solutions);
+		}
+
+		/* ==================== 表达式去重功能 ==================== */
+		// 表达式去重主函数
+		function deduplicateSolutions(solutions) {
+			const normalizedSet = new Set();
+			const uniqueSolutions = [];
+
+			for (let expr of solutions) {
+				// 对表达式进行规范化处理
+				const normalized = normalizeExpression(expr);
+
+				// 验证规范化后的结果是否仍为24
+				if (verifySolution(normalized)) {
+					// 如果规范化后的表达式未出现过，则保留
+					if (!normalizedSet.has(normalized)) {
+						normalizedSet.add(normalized);
+						uniqueSolutions.push(normalized);
+					}
+				} else {
+					// 如果规范化后结果改变，保留原表达式
+					if (!normalizedSet.has(expr)) {
+						normalizedSet.add(expr);
+						uniqueSolutions.push(expr);
+					}
+				}
+			}
+
+			return uniqueSolutions;
+		}
+
+		// 表达式规范化函数
+		function normalizeExpression(expr) {
+			// 第一步：去掉多余括号
+			let normalized = removeRedundantParentheses(expr);
+
+			// 第二步：小数字在前（交换律规范化）
+			normalized = sortCommutativeOperations(normalized);
+
+			// 第三步：再次去括号（因为排序后可能产生新括号）
+			normalized = removeRedundantParentheses(normalized);
+
+			return normalized;
+		}
+
+		// 去掉多余括号
+		function removeRedundantParentheses(expr) {
+			let result = expr;
+			let changed = true;
+
+			// 多次尝试去括号，直到无法再简化
+			while (changed) {
+				changed = false;
+				const beforeRemove = result;
+
+				// 尝试去掉各种冗余括号
+				result = tryRemoveParentheses(result);
+
+				if (beforeRemove !== result) {
+					changed = true;
+				}
+			}
+
+			return result;
+		}
+
+		// 尝试去掉括号（验证结果不变）
+		function tryRemoveParentheses(expr) {
+			// 找到所有括号对的位置
+			const result = expr;
+
+			// 遍历所有可能的括号对
+			for (let i = 0; i < expr.length; i++) {
+				if (expr[i] === '(') {
+					// 找到对应的右括号
+					let depth = 1;
+					let j = i + 1;
+					while (j < expr.length && depth > 0) {
+						if (expr[j] === '(') depth++;
+						if (expr[j] === ')') depth--;
+						j++;
+					}
+
+					if (depth === 0) {
+						// 找到了匹配的右括号，位置在 j-1
+						const fullMatch = expr.substring(i, j);
+						const innerContent = expr.substring(i + 1, j - 1);
+
+						// 尝试去掉括号
+						const withoutParens = expr.substring(0, i) + innerContent + expr.substring(j);
+
+						// 验证去掉括号后结果是否改变
+						if (verifyResultEqual(expr, withoutParens)) {
+							// 结果不变，可以去掉括号，返回去括号后的表达式
+							// 递归处理，因为可能还有其他冗余括号
+							return tryRemoveParentheses(withoutParens);
+						}
+					}
+				}
+			}
+
+			return result;
+		}
+
+		// 验证两个表达式的计算结果是否相等
+		function verifyResultEqual(expr1, expr2) {
+			try {
+				const result1 = eval(expr1);
+				const result2 = eval(expr2);
+				// 浮点数比较，使用容差
+				const equal = Math.abs(result1 - result2) < 0.0001;
+				return equal;
+			} catch (e) {
+				return false;
+			}
+		}
+
+		// 小数字在前（交换律规范化）
+		function sortCommutativeOperations(expr) {
+			// 先去括号，确保表达式是最简形式
+			expr = removeRedundantParentheses(expr);
+
+			// 使用递归方式对表达式树进行排序
+			return sortExpressionTree(expr);
+		}
+
+		// 对表达式树进行排序
+		function sortExpressionTree(expr) {
+			// 如果是纯数字，直接返回
+			if (/^\d+(\.\d+)?$/.test(expr.trim())) {
+				return expr.trim();
+			}
+
+			// 找到最低优先级的运算符（不在括号内）
+			const result = parseAndSort(expr);
+			if (result) return result;
+
+			return expr;
+		}
+
+		// 解析表达式并排序
+		function parseAndSort(expr) {
+			expr = expr.trim();
+
+			// 去掉最外层括号
+			while (expr.startsWith('(') && expr.endsWith(')')) {
+				const inner = expr.slice(1, -1);
+				let depth = 0, valid = true;
+				for (let c of inner) {
+					if (c === '(') depth++;
+					if (c === ')') depth--;
+					if (depth < 0) { valid = false; break; }
+				}
+				if (valid && depth === 0) {
+					expr = inner;
+				} else {
+					break;
+				}
+			}
+
+			// 找最低优先级运算符
+			let depth = 0, minPrecedence = Infinity, splitPos = -1, splitOp = null;
+			for (let i = expr.length - 1; i >= 0; i--) {
+				if (expr[i] === ')') depth++;
+				if (expr[i] === '(') depth--;
+				if (depth === 0) {
+					let prec = Infinity;
+					if (expr[i] === '+') prec = 1;
+					else if (expr[i] === '-') prec = 1;
+					else if (expr[i] === '*') prec = 2;
+					else if (expr[i] === '/') prec = 2;
+					if (prec < minPrecedence) {
+						minPrecedence = prec;
+						splitPos = i;
+						splitOp = expr[i];
+					}
+				}
+			}
+
+			if (splitPos === -1) return null;
+
+			const left = expr.slice(0, splitPos).trim();
+			const right = expr.slice(splitPos + 1).trim();
+
+			// 递归处理子表达式
+			const sortedLeft = sortExpressionTree(left);
+			const sortedRight = sortExpressionTree(right);
+
+			// 对加法和乘法，如果左边值大于右边，交换
+			if (splitOp === '+' || splitOp === '*') {
+				try {
+					const leftVal = eval(sortedLeft);
+					const rightVal = eval(sortedRight);
+					if (leftVal > rightVal) {
+						return `${sortedRight} ${splitOp} ${sortedLeft}`;
+					}
+				} catch (e) {
+					// 忽略错误，不交换
+				}
+			}
+
+			return `${sortedLeft} ${splitOp} ${sortedRight}`;
+		}
+
+		// 验证解法正确性（重新计算表达式）
+		function verifySolution(expression) {
+			try {
+				// 使用eval计算表达式（在生产环境中已通过findSolutions验证）
+				const result = eval(expression.replace(/=/g, '').trim());
+				return Math.abs(result - 24) < 0.0001;
+			} catch (e) {
+				return false;
+			}
+		}
+
+		// 格式化解法显示
+		function formatSolutions(solutions) {
+			if (solutions.length === 0) {
+				return '此题无解！';
+			}
+
+			const count = solutions.length;
+			const solutionsList = solutions.map(s => s + ' = 24').join('\n');
+			return `${count}种解法：\n${solutionsList}`;
+		}
+
+		/* ==================== UI渲染 - 卡牌显示 ==================== */
+		// 显示卡牌
+		function displayCards(cards, containerId) {
+			const container = document.getElementById(containerId);
+			container.innerHTML = '';
+
+			cards.forEach(card => {
+				const cardElement = createCardElement(card);
+				container.appendChild(cardElement);
+			});
+
+			// 保存当前卡牌到状态
+			gameState.currentCards = cards;
+		}
+
+		// 创建卡牌元素
+		function createCardElement(card) {
+			const cardDiv = document.createElement('div');
+
+			// 判断花色颜色（红心♥和方片♦为红色，黑桃♠和梅花♣为黑色）
+			const colorClass = (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black';
+			cardDiv.className = `card ${colorClass}`;
+
+			// 花色
+			const suitSpan = document.createElement('div');
+			suitSpan.className = 'suit';
+			suitSpan.textContent = card.suit;
+
+			// 点数
+			const rankSpan = document.createElement('div');
+			rankSpan.className = 'rank';
+			rankSpan.textContent = card.rank;
+
+			cardDiv.appendChild(suitSpan);
+			cardDiv.appendChild(rankSpan);
+
+			return cardDiv;
+		}
+
+		/* ==================== 练习模式逻辑 ==================== */
+		// 开始随机出题
+		function startRandomPractice() {
+			// 生成随机卡牌
+			const cards = getRandomCards(4);
+
+			// 计算解法
+			const solutions = findSolutions(cards);
+
+			// 保存到状态
+			gameState.currentCards = cards;
+			gameState.currentSolutions = solutions;
+
+			// 显示卡牌
+			displayCards(cards, 'practice-cards');
+
+			// 显示"查看答案"按钮
+			document.getElementById('show-answer-btn').style.display = 'inline-block';
+			document.getElementById('next-question-btn').style.display = 'none';
+
+			// 隐藏答案区域
+			document.getElementById('practice-answer-section').style.display = 'none';
+			document.getElementById('practice-answer-box').textContent = '';
+			document.getElementById('practice-result-message').textContent = '';
+		}
+
+		// 查看答案
+		function showAnswer() {
+			const solutions = gameState.currentSolutions;
+			const cards = gameState.currentCards;
+
+			// 显示答案区域
+			document.getElementById('practice-answer-section').style.display = 'block';
+
+			// 格式化并显示答案
+			const answerText = formatSolutions(solutions);
+			document.getElementById('practice-answer-box').textContent = answerText;
+
+			// 保存到历史记录
+			savePracticeHistory(cards, solutions);
+
+			// 隐藏"查看答案"按钮，显示"下一题"按钮
+			document.getElementById('show-answer-btn').style.display = 'none';
+			document.getElementById('next-question-btn').style.display = 'inline-block';
+		}
+
+		// 下一题
+		function nextQuestion() {
+			startRandomPractice();
+		}
+
+		/* ==================== 练习模式 - 自定义出题 ==================== */
+		// 切换自定义输入框显示
+		function toggleCustomInput() {
+			const inputGroup = document.getElementById('custom-input-group');
+			const isVisible = inputGroup.style.display === 'flex';
+
+			if (isVisible) {
+				inputGroup.style.display = 'none';
+				// 清空输入和错误信息
+				document.getElementById('num1').value = '';
+				document.getElementById('num2').value = '';
+				document.getElementById('num3').value = '';
+				document.getElementById('num4').value = '';
+				document.getElementById('custom-error').textContent = '';
+			} else {
+				inputGroup.style.display = 'flex';
+			}
+		}
+
+		// 验证并限制自定义输入范围（1-13）
+		function validateCustomInput(nums) {
+			// 检查是否为空
+			for (let num of nums) {
+				if (num === '' || num === null || num === undefined) {
+					return '请输入所有4个数字';
+				}
+			}
+
+			// 检查是否为数字
+			for (let num of nums) {
+				const n = parseFloat(num);
+				if (isNaN(n)) {
+					return '请输入有效的数字';
+				}
+			}
+
+			return null; // 验证通过
+		}
+
+		// 限制数字范围在1-13之间
+		function clampNumber(num) {
+			const n = parseFloat(num);
+			if (isNaN(n)) return 1;
+			if (n < 1) return 1;
+			if (n > 13) return 13;
+			return Math.round(n);
+		}
+
+		// 开始自定义出题
+		function startCustomPractice() {
+			// 获取输入值
+			const num1 = document.getElementById('num1').value;
+			const num2 = document.getElementById('num2').value;
+			const num3 = document.getElementById('num3').value;
+			const num4 = document.getElementById('num4').value;
+			const nums = [num1, num2, num3, num4];
+
+			// 验证输入
+			const error = validateCustomInput(nums);
+			if (error) {
+				document.getElementById('custom-error').textContent = error;
+				return;
+			}
+
+			// 清除错误信息
+			document.getElementById('custom-error').textContent = '';
+
+			// 限制数字范围在1-13之间
+			const numbers = nums.map(n => clampNumber(n));
+			const cards = createCardsFromNumbers(numbers);
+
+			// 计算解法
+			const solutions = findSolutions(cards);
+
+			// 保存到状态
+			gameState.currentCards = cards;
+			gameState.currentSolutions = solutions;
+
+			// 显示卡牌
+			displayCards(cards, 'practice-cards');
+
+			// 隐藏自定义输入框
+			document.getElementById('custom-input-group').style.display = 'none';
+
+			// 清空输入框
+			document.getElementById('num1').value = '';
+			document.getElementById('num2').value = '';
+			document.getElementById('num3').value = '';
+			document.getElementById('num4').value = '';
+
+			// 显示"查看答案"按钮
+			document.getElementById('show-answer-btn').style.display = 'inline-block';
+			document.getElementById('next-question-btn').style.display = 'none';
+
+			// 隐藏答案区域
+			document.getElementById('practice-answer-section').style.display = 'none';
+			document.getElementById('practice-answer-box').textContent = '';
+			document.getElementById('practice-result-message').textContent = '';
+		}
+
+		/* ==================== 练习模式 - 历史记录 ==================== */
+		// localStorage键名
+		const HISTORY_KEY = 'game24_practice_history';
+		const MAX_HISTORY = 10;
+
+		// 保存历史记录
+		function savePracticeHistory(cards, solutions) {
+			try {
+				// 创建历史记录对象
+				const record = {
+					timestamp: new Date().toLocaleString('zh-CN'),
+					cards: cards,
+					solutions: solutions,
+					hasSolution: solutions.length > 0,
+					solutionCount: solutions.length
+				};
+
+				// 读取现有历史
+				let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+
+				// 添加到数组开头
+				history.unshift(record);
+
+				// 限制最多10条
+				if (history.length > MAX_HISTORY) {
+					history = history.slice(0, MAX_HISTORY);
+				}
+
+				// 保存到localStorage
+				localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+			} catch (e) {
+				console.warn('localStorage不可用，历史记录未保存:', e);
+			}
+		}
+
+		// 显示历史记录
+		function showHistory() {
+			try {
+				const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+
+				const listContainer = document.getElementById('history-list');
+
+				if (history.length === 0) {
+					listContainer.innerHTML = '<p style="text-align: center; color: var(--color-text-light);">暂无历史记录</p>';
+				} else {
+					listContainer.innerHTML = history.map((record, index) => {
+						const cardsStr = record.cards.map(c => `${c.suit}${c.rank}`).join(' ');
+						const countStr = record.hasSolution ? `${record.solutionCount}种解法` : '无解';
+
+						return `
+							<div class="history-item" onclick="loadHistoryRecord(${index})">
+								<div class="history-item-time">${record.timestamp}</div>
+								<div class="history-item-cards">${cardsStr}</div>
+								<div class="history-item-count">${countStr}</div>
+							</div>
+						`;
+					}).join('');
+				}
+
+				// 显示模态框
+				document.getElementById('history-modal').classList.add('active');
+			} catch (e) {
+				alert('读取历史记录失败');
+			}
+		}
+
+		// 加载历史记录题目
+		function loadHistoryRecord(index) {
+			try {
+				const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+				const record = history[index];
+
+				// 恢复题目状态
+				gameState.currentCards = record.cards;
+				gameState.currentSolutions = record.solutions;
+
+				// 显示卡牌
+				displayCards(record.cards, 'practice-cards');
+
+				// 显示答案
+				document.getElementById('practice-answer-section').style.display = 'block';
+				const answerText = formatSolutions(record.solutions);
+				document.getElementById('practice-answer-box').textContent = answerText;
+
+				// 按钮状态
+				document.getElementById('show-answer-btn').style.display = 'none';
+				document.getElementById('next-question-btn').style.display = 'inline-block';
+
+				// 关闭模态框
+				closeHistory();
+			} catch (e) {
+				alert('加载历史记录失败');
+			}
+		}
+
+		// 清除历史记录
+		function clearHistory() {
+			if (confirm('确定要清除所有历史记录吗？')) {
+				try {
+					localStorage.removeItem(HISTORY_KEY);
+					showHistory(); // 刷新显示
+				} catch (e) {
+					alert('清除历史记录失败');
+				}
+			}
+		}
+
+		// 关闭历史记录模态框
+		function closeHistory() {
+			document.getElementById('history-modal').classList.remove('active');
+		}
+
+		/* ==================== 竞赛模式逻辑 ==================== */
+		const SCORES_KEY = 'game24_best_scores';
+		const MAX_SCORES = 10;
+
+		// 开始竞赛
+		function startContest() {
+			// 生成10道题目（包含3-4道无解题）
+			contestState.questions = generateContestQuestions();
+			contestState.currentIndex = 0;
+			contestState.correctCount = 0;
+			contestState.wrongCount = 0;
+			contestState.totalTime = 0;
+			contestState.isActive = true;
+
+			// 隐藏规则，显示竞赛界面
+			document.getElementById('contest-rules').style.display = 'none';
+			document.getElementById('contest-playing').style.display = 'block';
+
+			// 显示第一题
+			showContestQuestion(0);
+
+			// 启动计时器
+			startTimer();
+		}
+
+		// 生成竞赛题目（包含3-4道无解题）
+		function generateContestQuestions() {
+			const questions = [];
+			let noSolutionCount = 0;
+			const targetNoSolution = 3 + Math.floor(Math.random() * 2); // 3或4道无解题
+
+			while (questions.length < 10) {
+				const cards = getRandomCards(4);
+				const solutions = findSolutions(cards);
+				const hasSolution = solutions.length > 0;
+
+				// 控制无解题数量
+				if (!hasSolution) {
+					if (noSolutionCount < targetNoSolution) {
+						questions.push({ cards, solutions, hasSolution });
+						noSolutionCount++;
+					}
+				} else {
+					questions.push({ cards, solutions, hasSolution });
+				}
+			}
+
+			return questions;
+		}
+
+		// 显示竞赛题目
+		function showContestQuestion(index) {
+			const question = contestState.questions[index];
+
+			// 显示卡牌
+			displayCards(question.cards, 'contest-cards');
+
+			// 更新进度显示
+			document.getElementById('contest-progress').textContent = `${index + 1}/10`;
+			document.getElementById('contest-correct').textContent = `${contestState.correctCount}/${index}`;
+			document.getElementById('contest-score').textContent = `${contestState.correctCount * 10}分`;
+
+			// 显示判断按钮，隐藏下一题按钮
+			document.getElementById('contest-can-btn').style.display = 'inline-block';
+			document.getElementById('contest-cannot-btn').style.display = 'inline-block';
+			document.getElementById('contest-next-btn').style.display = 'none';
+
+			// 隐藏答案区域
+			document.getElementById('contest-answer-section').style.display = 'none';
+			document.getElementById('contest-result-message').textContent = '';
+			document.getElementById('contest-answer-box').textContent = '';
+		}
+
+		// 回答竞赛题目
+		function answerContest(canSolve) {
+			const question = contestState.questions[contestState.currentIndex];
+			const isCorrect = (canSolve === question.hasSolution);
+
+			// 更新统计
+			if (isCorrect) {
+				contestState.correctCount++;
+			} else {
+				contestState.wrongCount++;
+			}
+
+			// 停止计时器
+			stopTimer();
+
+			// 显示判断结果
+			const resultMessage = document.getElementById('contest-result-message');
+			resultMessage.textContent = isCorrect ? '✓ 正确!' : '✗ 错误!';
+			resultMessage.className = isCorrect ? 'result-message correct' : 'result-message wrong';
+
+			// 显示答案
+			document.getElementById('contest-answer-section').style.display = 'block';
+			const answerText = formatSolutions(question.solutions);
+			document.getElementById('contest-answer-box').textContent = answerText;
+
+			// 更新答对数显示
+			document.getElementById('contest-correct').textContent = `${contestState.correctCount}/${contestState.currentIndex + 1}`;
+			document.getElementById('contest-score').textContent = `${contestState.correctCount * 10}分`;
+
+			// 隐藏判断按钮，显示下一题按钮
+			document.getElementById('contest-can-btn').style.display = 'none';
+			document.getElementById('contest-cannot-btn').style.display = 'none';
+			document.getElementById('contest-next-btn').style.display = 'inline-block';
+		}
+
+		// 下一题
+		function nextContestQuestion() {
+			contestState.currentIndex++;
+
+			if (contestState.currentIndex >= 10) {
+				// 竞赛完成
+				finishContest();
+			} else {
+				// 显示下一题
+				showContestQuestion(contestState.currentIndex);
+
+				// 重新启动计时器
+				startTimer();
+			}
+		}
+
+		// 完成竞赛
+		function finishContest() {
+			// 停止计时器
+			stopTimer();
+
+			// 计算结果
+			const score = contestState.correctCount * 10;
+			const avgTime = Math.round(contestState.totalTime / 10);
+			let rating = '';
+			if (score >= 90) rating = '优秀';
+			else if (score >= 80) rating = '良好';
+			else if (score >= 60) rating = '一般';
+			else rating = '需努力';
+
+			// 显示结果
+			const resultContent = `
+				<p style="font-size: 1.5em; color: var(--color-primary); margin: 20px 0;">
+					<strong>${rating}</strong>
+				</p>
+				<p>答对题数：<strong style="color: var(--color-success);">${contestState.correctCount}</strong> 题</p>
+				<p>答错题数：<strong style="color: var(--color-danger);">${contestState.wrongCount}</strong> 题</p>
+				<p>总用时：<strong>${formatTime(contestState.totalTime)}</strong></p>
+				<p>平均用时：<strong>${avgTime}</strong> 秒/题</p>
+				<p>得分：<strong style="color: var(--color-primary); font-size: 1.5em;">${score}</strong> 分</p>
+			`;
+			document.getElementById('contest-result-content').innerHTML = resultContent;
+
+			// 保存成绩
+			saveContestScore({
+				timestamp: new Date().toLocaleString('zh-CN'),
+				correctCount: contestState.correctCount,
+				wrongCount: contestState.wrongCount,
+				totalTime: contestState.totalTime,
+				avgTime: avgTime,
+				score: score,
+				rating: rating
+			});
+
+			// 显示结果模态框
+			document.getElementById('contest-result-modal').classList.add('active');
+		}
+
+		// 关闭竞赛结果
+		function closeContestResult() {
+			document.getElementById('contest-result-modal').classList.remove('active');
+			exitContest();
+		}
+
+		// 退出竞赛
+		function exitContest() {
+			// 停止计时器
+			stopTimer();
+
+			// 重置状态
+			contestState.isActive = false;
+
+			// 显示规则，隐藏竞赛界面
+			document.getElementById('contest-rules').style.display = 'block';
+			document.getElementById('contest-playing').style.display = 'none';
+		}
+
+		/* ==================== 竞赛模式 - 计时器 ==================== */
+		function startTimer() {
+			stopTimer(); // 先停止之前的计时器
+
+			contestState.timer = setInterval(() => {
+				contestState.totalTime++;
+				updateTimerDisplay();
+			}, 1000);
+		}
+
+		function stopTimer() {
+			if (contestState.timer) {
+				clearInterval(contestState.timer);
+				contestState.timer = null;
+			}
+		}
+
+		function updateTimerDisplay() {
+			document.getElementById('contest-timer').textContent = formatTime(contestState.totalTime);
+		}
+
+		function formatTime(seconds) {
+			const minutes = Math.floor(seconds / 60);
+			const secs = seconds % 60;
+			return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+		}
+
+		/* ==================== 竞赛模式 - 成绩统计 ==================== */
+		function saveContestScore(score) {
+			try {
+				let scores = JSON.parse(localStorage.getItem(SCORES_KEY) || '[]');
+
+				scores.push(score);
+
+				// 排序：得分降序，得分相同时用时升序
+				scores.sort((a, b) => {
+					if (b.score !== a.score) {
+						return b.score - a.score;
+					}
+					return a.totalTime - b.totalTime;
+				});
+
+				// 保留最多10条
+				if (scores.length > MAX_SCORES) {
+					scores = scores.slice(0, MAX_SCORES);
+				}
+
+				localStorage.setItem(SCORES_KEY, JSON.stringify(scores));
+			} catch (e) {
+				console.warn('localStorage不可用，成绩未保存:', e);
+			}
+		}
+
+		function showBestScores() {
+			try {
+				const scores = JSON.parse(localStorage.getItem(SCORES_KEY) || '[]');
+
+				const listContainer = document.getElementById('best-scores-list');
+
+				if (scores.length === 0) {
+					listContainer.innerHTML = '<p style="text-align: center; color: var(--color-text-light);">暂无成绩记录</p>';
+				} else {
+					listContainer.innerHTML = '<table style="width: 100%; border-collapse: collapse;">' +
+						'<thead><tr style="background: var(--color-bg); border-bottom: 2px solid var(--color-border);">' +
+						'<th style="padding: 10px;">排名</th><th>日期</th><th>得分</th><th>用时</th><th>正确</th></tr></thead>' +
+						'<tbody>' +
+						scores.map((score, index) => `
+							<tr style="border-bottom: 1px solid var(--color-border);">
+								<td style="padding: 10px; text-align: center; font-weight: bold; color: var(--color-primary);">${index + 1}</td>
+								<td style="padding: 10px; text-align: center;">${score.timestamp}</td>
+								<td style="padding: 10px; text-align: center; font-weight: bold; color: var(--color-success);">${score.score}分</td>
+								<td style="padding: 10px; text-align: center;">${formatTime(score.totalTime)}</td>
+								<td style="padding: 10px; text-align: center;">${score.correctCount}/10</td>
+							</tr>
+						`).join('') +
+						'</tbody></table>';
+				}
+
+				document.getElementById('best-scores-modal').classList.add('active');
+			} catch (e) {
+				alert('读取成绩记录失败');
+			}
+		}
+
+		function closeBestScores() {
+			document.getElementById('best-scores-modal').classList.remove('active');
+		}
+	</script>
+</body>
+</html>
