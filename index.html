@@ -6,7 +6,7 @@
 	<title>24点游戏</title>
 
 	<!-- 预加载外部SVG资源 -->
-	<link rel="preload" href="./assets/cards.svg" as="image" type="image/svg+xml" id="svg-preload">
+	<link rel="preload" href="./assets/cards.svg" as="image" type="image/svg+xml">
 
 	<style>
 		/* ==================== CSS变量配置 ==================== */
@@ -392,28 +392,20 @@
 	/* 小屏设备优化 - 使用百分比宽度确保不溢出 */
 	@media (max-width: 430px) {
 		:root {
-			--card-width: 100px;
-			--card-height: 140px;
-			--card-gap: 5px;
-			--card-font-size: 1.8em;
-			--container-padding: 10px;
-		}
-		body {
-			padding: 5px;
+			--card-width: 80px;
+			--card-height: 112px;
+			--card-gap: 6px;
+			--container-padding: 15px;
 		}
 	}
 
 	/* 超小屏设备（如iPhone SE） */
 	@media (max-width: 375px) {
 		:root {
-			--card-width: 87px;
-			--card-height: 122px;
-			--card-gap: 4px;
-			--card-font-size: 1.7em;
-			--container-padding: 10px;
-		}
-		body {
-			padding: 5px;
+			--card-width: 76px;
+			--card-height: 106px;
+			--card-gap: 5px;
+			--container-padding: 12px;
 		}
 	}
 	</style>
@@ -432,11 +424,6 @@
 		<div id="practice-mode" class="mode-content active">
 			<!-- 卡牌显示区域 -->
 			<div id="practice-cards" class="cards-container"></div>
-
-			<!-- SVG加载提示 -->
-			<div id="svg-loading-hint" style="text-align: center; color: #000; font-size: 1em; font-weight: bold; margin: 10px 0; display: none;">
-				图片加载中，请等待...
-			</div>
 
 			<!-- 自定义输入区域 -->
 			<div class="custom-input-group" id="custom-input-group">
@@ -506,11 +493,6 @@
 				<!-- 卡牌显示 -->
 				<div id="contest-cards" class="cards-container"></div>
 
-				<!-- SVG加载提示 -->
-				<div id="svg-loading-hint-contest" style="text-align: center; color: #000; font-size: 1em; font-weight: bold; margin: 10px 0; display: none;">
-					图片加载中，请等待...
-				</div>
-
 				<!-- 判断按钮和下一题按钮 -->
 				<div class="btn-group">
 					<button class="btn btn-success" id="contest-can-btn" onclick="answerContest(true)">能</button>
@@ -557,43 +539,6 @@
 	</div>
 
 	<script>
-		/* ==================== SVG资源加载状态 ==================== */
-		let svgLoaded = false;
-
-		// 显示加载提示
-		function showLoadingHint() {
-			const hintPractice = document.getElementById('svg-loading-hint');
-			const hintContest = document.getElementById('svg-loading-hint-contest');
-			if (hintPractice) hintPractice.style.display = 'block';
-			if (hintContest) hintContest.style.display = 'block';
-		}
-
-		// 隐藏加载提示
-		function hideLoadingHint() {
-			const hintPractice = document.getElementById('svg-loading-hint');
-			const hintContest = document.getElementById('svg-loading-hint-contest');
-			if (hintPractice) hintPractice.style.display = 'none';
-			if (hintContest) hintContest.style.display = 'none';
-		}
-
-		// 检测SVG加载
-		const img = new Image();
-		img.onload = function() {
-			svgLoaded = true;
-			hideLoadingHint();
-		};
-		img.onerror = function() {
-			console.error('SVG资源加载失败');
-		};
-		img.src = './assets/cards.svg';
-
-		// 页面加载后如果还没加载完成，显示提示
-		window.addEventListener('load', () => {
-			if (!svgLoaded) {
-				showLoadingHint();
-			}
-		});
-
 		/* ==================== 全局状态 ==================== */
 		const gameState = {
 			currentMode: 'practice', // 当前模式：practice 或 contest
