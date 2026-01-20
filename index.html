@@ -5,8 +5,11 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>24点游戏</title>
 
-	<!-- 预加载外部SVG资源 -->
-	<link rel="preload" href="./assets/cards.svg" as="image" type="image/svg+xml">
+	<!-- 预加载卡牌SVG -->
+	<link rel="preload" href="./assets/cards/AS.svg" as="image" type="image/svg+xml">
+	<link rel="preload" href="./assets/cards/AH.svg" as="image" type="image/svg+xml">
+	<link rel="preload" href="./assets/cards/AC.svg" as="image" type="image/svg+xml">
+	<link rel="preload" href="./assets/cards/AD.svg" as="image" type="image/svg+xml">
 
 	<style>
 		/* ==================== CSS变量配置 ==================== */
@@ -22,7 +25,7 @@
 
 			/* 卡牌配置 */
 			--card-width: 160px;
-			--card-height: 224px;
+			/* height 由 aspect-ratio 自动计算 (224/313) */
 			--card-border-radius: 12px;
 			--card-font-size: 2em;
 			--card-gap: 18px;
@@ -156,18 +159,35 @@
 
 		.card {
 			width: var(--card-width);
-			height: var(--card-height);
+			/* 使用 aspect-ratio 保持 SVG 比例 (224:313 ≈ 0.716) */
+			aspect-ratio: 224 / 313;
+
 			background: white;
-			border: 1px solid #ddd;
+			border: none;  /* SVG 本身已有边框 */
+
 			border-radius: var(--card-border-radius);
 			position: relative;
 			font-size: var(--card-font-size);
 			font-weight: bold;
 			cursor: pointer;
 			transition: all 0.3s;
-			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+			/* 增强阴影效果 */
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+						0 1px 3px rgba(0, 0, 0, 0.15);
+
 			user-select: none;
+			overflow: hidden;  /* 配合圆角裁剪 */
 		}
+
+		/* 确保卡牌内的图片保持比例且填充容器 */
+		.card img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			display: block;
+		}
+
 
 		.card:hover {
 			transform: translateY(-8px);
@@ -365,7 +385,7 @@
 
 				/* 移动端调整卡牌 */
 				--card-width: 110px;
-				--card-height: 154px;
+				/* height 由 aspect-ratio 自动计算 (224/313) */
 				--card-font-size: 1.5em;
 				--card-gap: 8px;
 
@@ -387,25 +407,38 @@
 			body {
 				padding: 10px;
 			}
+
+			.card {
+				/* 移动端减弱阴影 */
+				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+			}
 		}
 
 	/* 小屏设备优化 - 使用百分比宽度确保不溢出 */
 	@media (max-width: 430px) {
 		:root {
-			--card-width: 80px;
-			--card-height: 112px;
-			--card-gap: 6px;
-			--container-padding: 15px;
+			--card-width: 100px;
+			/* height 由 aspect-ratio 自动计算 (224/313) */
+			--card-gap: 5px;
+			--card-font-size: 1.8em;
+			--container-padding: 10px;
+		}
+		body {
+			padding: 5px;
 		}
 	}
 
 	/* 超小屏设备（如iPhone SE） */
 	@media (max-width: 375px) {
 		:root {
-			--card-width: 76px;
-			--card-height: 106px;
-			--card-gap: 5px;
-			--container-padding: 12px;
+			--card-width: 87px;
+			/* height 由 aspect-ratio 自动计算 (224/313) */
+			--card-gap: 4px;
+			--card-font-size: 1.7em;
+			--container-padding: 10px;
+		}
+		body {
+			padding: 5px;
 		}
 	}
 	</style>
@@ -424,6 +457,11 @@
 		<div id="practice-mode" class="mode-content active">
 			<!-- 卡牌显示区域 -->
 			<div id="practice-cards" class="cards-container"></div>
+
+			<!-- SVG加载提示 -->
+			<div id="svg-loading-hint" style="text-align: center; color: #000; font-size: 1em; font-weight: bold; margin: 10px 0; display: none;">
+				图片加载中，请等待...
+			</div>
 
 			<!-- 自定义输入区域 -->
 			<div class="custom-input-group" id="custom-input-group">
@@ -493,6 +531,11 @@
 				<!-- 卡牌显示 -->
 				<div id="contest-cards" class="cards-container"></div>
 
+				<!-- SVG加载提示 -->
+				<div id="svg-loading-hint-contest" style="text-align: center; color: #000; font-size: 1em; font-weight: bold; margin: 10px 0; display: none;">
+					图片加载中，请等待...
+				</div>
+
 				<!-- 判断按钮和下一题按钮 -->
 				<div class="btn-group">
 					<button class="btn btn-success" id="contest-can-btn" onclick="answerContest(true)">能</button>
@@ -543,8 +586,30 @@
 		const gameState = {
 			currentMode: 'practice', // 当前模式：practice 或 contest
 			currentCards: [], // 当前显示的4张牌
-			currentSolutions: [] // 当前题目的解法
+			currentSolutions: [], // 当前题目的解法
+			svgLoaded: false // SVG sprite 加载状态
 		};
+
+		/* ==================== SVG 加载检测 ==================== */
+		// 直接使用独立 SVG 文件，无需预加载检测
+		function checkSvgLoaded() {
+			return Promise.resolve(true);
+		}
+
+		// 显示 SVG 加载提示（不再需要）
+		function showSvgHint(containerId) {
+			// 空实现
+		}
+
+		// 隐藏所有 SVG 提示（不再需要）
+		function hideSvgHints() {
+			// 空实现
+		}
+
+		// 显示 SVG 错误信息（不再需要）
+		function showSvgError(message) {
+			// 空实现
+		}
 
 		// 竞赛模式状态
 		const contestState = {
@@ -981,53 +1046,67 @@
 			gameState.currentCards = cards;
 		}
 
-		// 获取卡牌sprite ID
-		function getCardSpriteId(card) {
-			const suitMap = {
-				'♠': 'spade',
-				'♥': 'heart',
-				'♣': 'club',
-				'♦': 'diamond'
-			};
-			const rankMap = {
-				'A': '1',
-				'2': '2',
-				'3': '3',
-				'4': '4',
-				'5': '5',
-				'6': '6',
-				'7': '7',
-				'8': '8',
-				'9': '9',
-				'10': '10',
-				'J': 'jack',
-				'Q': 'queen',
-				'K': 'king'
-			};
-			return `${suitMap[card.suit]}_${rankMap[card.rank]}`;
+		// 降级方案：使用文本样式显示卡牌（当 SVG 加载失败时）
+		function displayFallbackCards(cards, containerId) {
+			const container = document.getElementById(containerId);
+			container.innerHTML = '';
+
+			cards.forEach(card => {
+				const cardDiv = document.createElement('div');
+				cardDiv.className = 'card';
+				cardDiv.style.cssText = `
+					background: white;
+					border: 2px solid #bdc3c7;
+					display: flex;
+					flex-direction: column;
+					justify-content: center;
+					align-items: center;
+				`;
+
+				// 根据花色设置颜色
+				const isRed = card.suit === '♥' || card.suit === '♦';
+				const color = isRed ? 'var(--color-card-red)' : 'var(--color-card-black)';
+
+				cardDiv.innerHTML = `
+					<div style="font-size: 2.5em; color: ${color}; font-weight: bold;">${card.rank}</div>
+					<div style="font-size: 3em; color: ${color};">${card.suit}</div>
+				`;
+
+				container.appendChild(cardDiv);
+			});
 		}
 
-		// 创建卡牌元素（使用外部SVG Sprite）
+		// 获取卡牌文件名
+		function getCardFileName(card) {
+			const suitMap = {
+				'♠': 'S',  // Spade
+				'♥': 'H',  // Heart
+				'♣': 'C',  // Club
+				'♦': 'D'   // Diamond
+			};
+
+			const rankStr = card.rank; // 'A', '2'-'10', 'J', 'Q', 'K'
+			const suitStr = suitMap[card.suit];
+
+			// 文件名格式：AS.svg, 10H.svg, KD.svg
+			return `${rankStr}${suitStr}`;
+		}
+
+		// 创建卡牌元素（直接使用独立 SVG 文件）
 		function createCardElement(card) {
 			const cardDiv = document.createElement('div');
 			cardDiv.className = 'card';
 
-			// 获取卡牌sprite ID
-			const spriteId = getCardSpriteId(card);
+			// 生成文件名（如 AS, 10H, KD）
+			const fileName = getCardFileName(card);
 
-			// 创建SVG元素
-			const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-			svg.setAttribute('viewBox', '0 0 169.075 244.640');
-			svg.setAttribute('width', '100%');
-			svg.setAttribute('height', '100%');
-			svg.style.display = 'block';
+			// 使用 <img> 标签显示 SVG
+			const img = document.createElement('img');
+			img.src = `./assets/cards/${fileName}.svg`;
+			img.alt = `${card.rank}${card.suit}`;
+			// 样式由 CSS .card img 控制
 
-			// 创建use元素引用外部SVG
-			const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-			use.setAttribute('href', `./assets/cards.svg#${spriteId}`);
-
-			svg.appendChild(use);
-			cardDiv.appendChild(svg);
+			cardDiv.appendChild(img);
 
 			return cardDiv;
 		}
